@@ -83,7 +83,7 @@ def clean_data(gt_anno, dt_anno, current_class, difficulty):
 
     return num_valid_gt, ignored_gt, ignored_dt, dc_bboxes
 
-
+# 计算交并比，query_boxes可以理解为ground_truth
 @numba.jit(nopython=True)
 def image_box_overlap(boxes, query_boxes, criterion=-1):
     N = boxes.shape[0]
@@ -114,6 +114,7 @@ def image_box_overlap(boxes, query_boxes, criterion=-1):
     return overlaps
 
 
+# 注意投影到bev视角下overlap不一定是矩形，可能是不规则的四边形
 def bev_box_overlap(boxes, qboxes, criterion=-1):
     riou = rotate_iou_gpu_eval(boxes, qboxes, criterion)
     return riou
