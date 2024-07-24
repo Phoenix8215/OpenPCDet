@@ -177,7 +177,7 @@ def d3_box_overlap(boxes, qboxes, criterion=-1):
     return rinc
 
 
-# 计算给定阈值下的检测统计信息
+# 计算给定阈值下的检测统计信息,在fused_compute_statistics函数中会被调用到
 # tp：真阳性数
 # fp：假阳性数量
 # fn：假阴性数量
@@ -315,7 +315,8 @@ def get_split_parts(num, num_part):
     else:
         return [same_part] * num_part + [remain_num]
 
-
+# 在多个阈值下融合计算统计信息。
+# 更新的 pr 数组，包含各阈值下的统计信息(TP, FP, FN, AOS)。
 @numba.jit(nopython=True)
 def fused_compute_statistics(overlaps,
                              pr,
