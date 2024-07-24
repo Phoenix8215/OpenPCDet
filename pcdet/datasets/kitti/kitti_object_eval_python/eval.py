@@ -677,7 +677,9 @@ def do_coco_style_eval(gt_annos, dt_annos, current_classes, overlap_ranges,
         mAP_aos = mAP_aos.mean(-1)
     return mAP_bbox, mAP_bev, mAP_3d, mAP_aos
 
-
+# 用的最多的一个函数
+# 用于评估目标检测模型的性能，并生成评估结果的详细报告。该函数支持对2D边界框（bbox）、BEV（鸟瞰图）、
+# 3D和AOS（平均方向相似度）的评估，并返回不同评估标准下的平均精度（mAP）。
 def get_official_eval_result(gt_annos, dt_annos, current_classes, PR_detail_dict=None):
     overlap_0_7 = np.array([[0.7, 0.5, 0.5, 0.7,
                              0.5, 0.7], [0.7, 0.5, 0.5, 0.7, 0.5, 0.7],
