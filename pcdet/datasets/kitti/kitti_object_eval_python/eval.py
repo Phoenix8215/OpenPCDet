@@ -156,7 +156,7 @@ def d3_box_overlap_kernel(boxes, qboxes, rinc, criterion=-1):
                 if iw > 0:
                     area1 = boxes[i, 3] * boxes[i, 4] * boxes[i, 5]
                     area2 = qboxes[j, 3] * qboxes[j, 4] * qboxes[j, 5]
-                    inc = iw * rinc[i, j]
+                    inc = iw * rinc[i, j] # 通过高度乘底面overlap从而得到体积
                     if criterion == -1:
                         ua = (area1 + area2 - inc)
                     elif criterion == 0:
@@ -169,7 +169,7 @@ def d3_box_overlap_kernel(boxes, qboxes, rinc, criterion=-1):
                 else:
                     rinc[i, j] = 0.0
 
-
+# 计算3D bbox的overlap
 def d3_box_overlap(boxes, qboxes, criterion=-1):
     rinc = rotate_iou_gpu_eval(boxes[:, [0, 2, 3, 5, 6]],
                                qboxes[:, [0, 2, 3, 5, 6]], 2)
