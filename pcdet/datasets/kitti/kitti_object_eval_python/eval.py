@@ -31,6 +31,13 @@ def get_thresholds(scores: np.ndarray, num_gt, num_sample_pts=41):
 
 def clean_data(gt_anno, dt_anno, current_class, difficulty):
     CLASS_NAMES = ['car', 'pedestrian', 'cyclist', 'van', 'person_sitting', 'truck']
+    """
+    MIN_HEIGHT：定义了在不同难度下，目标边界框的最小高度要求。索引分别对应不同难度等级（如容易、中等、困难）。对于难度等级为0（容易）的样本，最小高度要求是40像素；对于难度等级为1（中等），最小高度要求是25像素；对于难度等级为2（困难），最小高度也是25像素。
+
+    MAX_OCCLUSION：定义了在不同难度下，目标的最大遮挡程度。遮挡程度从0（完全可见）到2（严重遮挡）。对于容易难度，最大遮挡程度为0；对于中等难度，最大遮挡程度为1；对于困难难度，最大遮挡程度为2。
+
+    MAX_TRUNCATION：定义了在不同难度下，目标的最大截断比例。截断比例是指目标被截断的部分占其总高度的比例。对于容易难度，最大截断比例为0.15；对于中等难度，最大截断比例为0.3；对于困难难度，最大截断比例为0.5。
+    """
     MIN_HEIGHT = [40, 25, 25]
     MAX_OCCLUSION = [0, 1, 2]
     MAX_TRUNCATION = [0.15, 0.3, 0.5]
@@ -84,7 +91,7 @@ def clean_data(gt_anno, dt_anno, current_class, difficulty):
 
     return num_valid_gt, ignored_gt, ignored_dt, dc_bboxes
 
-# 计算交并比，query_boxes可以理解为ground_truth
+# 计算交并比，query_boxes == ground_truth
 @numba.jit(nopython=True)
 def image_box_overlap(boxes, query_boxes, criterion=-1):
     N = boxes.shape[0]
