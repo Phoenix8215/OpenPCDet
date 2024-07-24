@@ -47,6 +47,9 @@ def clean_data(gt_anno, dt_anno, current_class, difficulty):
     num_dt = len(dt_anno["name"])
     num_valid_gt = 0
     # 处理真实标注（GT）
+    # 确认有效目标：我们需要确认哪些真实标签是当前评估类别的有效目标。例如，当我们评估行人检测模型时，我们只关心那些被标记为“行人”或相关类别（如“坐着的人”）的标签。
+    # 过滤不符合条件的目标：真实标签可能包括一些不符合评估条件的目标，例如高度太低、遮挡过多或截断过大的目标。
+    # 处理特殊标签：有些标签表示“不关心区域”（DontCare），这些区域中的目标不会对模型性能评估产生影响。
     for i in range(num_gt):
         bbox = gt_anno["bbox"][i]
         gt_name = gt_anno["name"][i].lower()
