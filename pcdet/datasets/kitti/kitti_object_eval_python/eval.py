@@ -659,7 +659,8 @@ def do_eval(gt_annos,
         PR_detail_dict['3d'] = ret['precision']
     return mAP_bbox, mAP_bev, mAP_3d, mAP_aos, mAP_bbox_R40, mAP_bev_R40, mAP_3d_R40, mAP_aos_R40
 
-
+# do_eval 函数按照固定的重叠率阈值（如 0.7 和 0.5）进行评估，主要评估单一阈值下的模型性能。
+# do_coco_style_eval：按照 COCO 风格的评估标准，生成多个重叠率阈值（如从 0.5 到 0.95），并在这些阈值下进行评估，然后计算这些阈值下的平均性能。
 def do_coco_style_eval(gt_annos, dt_annos, current_classes, overlap_ranges,
                        compute_aos):
     # overlap_ranges: [range, metric, num_class]
@@ -677,7 +678,7 @@ def do_coco_style_eval(gt_annos, dt_annos, current_classes, overlap_ranges,
         mAP_aos = mAP_aos.mean(-1)
     return mAP_bbox, mAP_bev, mAP_3d, mAP_aos
 
-# 用的最多的一个函数
+# 用的最多的一个函数(可以理解为do_eval函数的详细版，内部其实也调用了do_eval函数)
 # 用于评估目标检测模型的性能，并生成评估结果的详细报告。该函数支持对2D边界框（bbox）、BEV（鸟瞰图）、
 # 3D和AOS（平均方向相似度）的评估，并返回不同评估标准下的平均精度（mAP）。
 def get_official_eval_result(gt_annos, dt_annos, current_classes, PR_detail_dict=None):
