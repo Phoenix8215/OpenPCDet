@@ -443,7 +443,14 @@ def calculate_iou_partly(gt_annos, dt_annos, metric, num_parts=50):
 
     return overlaps, parted_overlaps, total_gt_num, total_dt_num
 
-
+# 从真实标注和检测结果中提取和处理相关信息，并生成后续计算统计信息和评估模型性能所需的数据结构。
+# gt_datas_list：每个样本的真实标注数据列表。
+# dt_datas_list：每个样本的检测结果数据列表。
+# ignored_gts：每个样本中被忽略的真实标注列表。
+# ignored_dets：每个样本中被忽略的检测结果列表。
+# dontcares：每个样本中 DontCare 区域的边界框列表。
+# total_dc_num：每个样本中 DontCare 区域的数量数组。
+# total_num_valid_gt：所有样本中有效的真实标注数量。
 def _prepare_data(gt_annos, dt_annos, current_class, difficulty):
     gt_datas_list = []
     dt_datas_list = []
