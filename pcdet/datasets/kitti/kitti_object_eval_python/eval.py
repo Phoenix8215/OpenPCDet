@@ -46,11 +46,18 @@ def clean_data(gt_anno, dt_anno, current_class, difficulty):
     num_gt = len(gt_anno["name"])
     num_dt = len(dt_anno["name"])
     num_valid_gt = 0
+    # 处理真实标注（GT）
     for i in range(num_gt):
         bbox = gt_anno["bbox"][i]
         gt_name = gt_anno["name"][i].lower()
         height = bbox[3] - bbox[1]
         valid_class = -1
+        """
+        当我们评估 pedestrian 类别时，如果真实标注的类别是 person_sitting，
+        我们仍然会将其视为一个相关的类别（valid_class = 0），而不是完全无效的类别（valid_class = -1）。
+        在目标检测任务中，将一些相关但不同的类别视为有效的做法是合理的。例如，站立行人和坐着行人都可以被视为行人，
+        因为它们在某些应用场景（如自动驾驶中的行人检测）中具有相似的处理要求。
+        """
         if (gt_name == current_cls_name):
             valid_class = 1
         elif (current_cls_name == "Pedestrian".lower()
@@ -76,6 +83,7 @@ def clean_data(gt_anno, dt_anno, current_class, difficulty):
     # for i in range(num_gt):
         if gt_anno["name"][i] == "DontCare":
             dc_bboxes.append(gt_anno["bbox"][i])
+    # 处理检测结果（DT）
     for i in range(num_dt):
         if (dt_anno["name"][i].lower() == current_cls_name):
             valid_class = 1
