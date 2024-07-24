@@ -7,7 +7,10 @@ from .rotate_iou import rotate_iou_gpu_eval
 
 # 这个函数用于计算AP
 # scores 是包含模型置信度分数的数组，通过排序和逐步增加召回率，计算出覆盖整个分数范围的阈值列表。
-# num_sample_pts 代表采样点的个数，用于通过插值的方法计算PR曲线的面积,返回一个precision的列表
+# num_sample_pts 代表采样点的个数
+# 在遍历分数的过程中，根据当前的召回率和预设的召回率步长（由 num_sample_pts 确定），选择适当的分数作为阈值，并更新召回率。
+# 对于每个阈值，将所有检测结果中分数大于等于该阈值的结果视为正类，并计算对应的真阳性（TP）、
+# 假阳性（FP）、假阴性（FN），从而得到精确率（Precision）和召回率（Recall）。
 @numba.jit
 def get_thresholds(scores: np.ndarray, num_gt, num_sample_pts=41):
     scores.sort()
@@ -481,7 +484,7 @@ def _prepare_data(gt_annos, dt_annos, current_class, difficulty):
     return (gt_datas_list, dt_datas_list, ignored_gts, ignored_dets, dontcares,
             total_dc_num, total_num_valid_gt)
 
-
+# 用于评估目标检测模型的性能。该函数支持2D、BEV、3D和AOS评估，并可以计算从0.5到0.95的coco AP
 def eval_class(gt_annos,
                dt_annos,
                current_classes,
@@ -589,14 +592,14 @@ def eval_class(gt_annos,
     }
     return ret_dict
 
-
+# 计算在11个特定点上的平均精度，符合 PASCAL VOC 评估标准。
 def get_mAP(prec):
     sums = 0
     for i in range(0, prec.shape[-1], 4):
         sums = sums + prec[..., i]
     return sums / 11 * 100
 
-
+# 计算在40个点上的平均精度，符合 COCO 评估标准。
 def get_mAP_R40(prec):
     sums = 0
     for i in range(1, prec.shape[-1]):
@@ -612,7 +615,9 @@ def print_str(value, *arg, sstream=None):
     print(value, *arg, file=sstream)
     return sstream.getvalue()
 
-
+# 评估目标检测模型在不同评估标准下的性能，包括2D边界框、BEV、3D和AOS。
+# 该函数通过调用 eval_class 计算精度和召回率，并进一步计算平均精度（mAP），
+# 最后返回所有评估标准下的平均精度值。
 def do_eval(gt_annos,
             dt_annos,
             current_classes,
