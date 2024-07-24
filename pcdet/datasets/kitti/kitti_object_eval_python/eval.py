@@ -5,8 +5,9 @@ import numpy as np
 
 from .rotate_iou import rotate_iou_gpu_eval
 
-# 这个函数用于计算AP，scores代表gt和每个detection之间的overlap, 比如7个gt，8个bbox则一共有56种可能
-# num_sample_pts 代表采样点的个数，用于通过插值的方法计算PR曲线的面积
+# 这个函数用于计算AP
+# scores 是包含模型置信度分数的数组，通过排序和逐步增加召回率，计算出覆盖整个分数范围的阈值列表。
+# num_sample_pts 代表采样点的个数，用于通过插值的方法计算PR曲线的面积,返回一个precision的列表
 @numba.jit
 def get_thresholds(scores: np.ndarray, num_gt, num_sample_pts=41):
     scores.sort()
