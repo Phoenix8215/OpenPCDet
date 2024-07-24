@@ -177,6 +177,12 @@ def d3_box_overlap(boxes, qboxes, criterion=-1):
     return rinc
 
 
+# 计算给定阈值下的检测统计信息
+# tp：真阳性数
+# fp：假阳性数量
+# fn：假阴性数量
+# similarity：相似度（AOS），用于衡量角度差异的指标。
+# thresholds：保存那些成功匹配到真实标注（ground truth）的检测结果（detections）的分数（confidence score）。
 @numba.jit(nopython=True)
 def compute_statistics_jit(overlaps,
                            gt_datas,
