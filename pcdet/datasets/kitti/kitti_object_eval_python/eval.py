@@ -87,6 +87,8 @@ def clean_data(gt_anno, dt_anno, current_class, difficulty):
         if gt_anno["name"][i] == "DontCare":
             dc_bboxes.append(gt_anno["bbox"][i])
     # 处理检测结果（DT）
+    # 确认有效检测：我们需要确认哪些检测结果是针对当前评估类别的有效检测。例如，当评估行人检测模型时，我们只关心那些检测结果被标记为“行人”的。
+    # 过滤不符合条件的检测
     for i in range(num_dt):
         if (dt_anno["name"][i].lower() == current_cls_name):
             valid_class = 1
