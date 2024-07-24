@@ -316,7 +316,7 @@ def get_split_parts(num, num_part):
         return [same_part] * num_part + [remain_num]
 
 # 在多个阈值下融合计算统计信息。
-# 更新的 pr 数组，包含各阈值下的统计信息(TP, FP, FN, AOS)。
+# 更新的 pr 数组，包含各阈值下的统计信息(TP, FP, FN, AOS相似度)。
 @numba.jit(nopython=True)
 def fused_compute_statistics(overlaps,
                              pr,
@@ -366,7 +366,7 @@ def fused_compute_statistics(overlaps,
         dt_num += dt_nums[i]
         dc_num += dc_nums[i]
 
-
+# 将数据分成若干部分，计算每部分的 IoU 重叠度，然后合并结果，以提高计算效率。
 def calculate_iou_partly(gt_annos, dt_annos, metric, num_parts=50):
     """fast iou algorithm. this function can be used independently to
     do result analysis. Must be used in CAMERA coordinate system.
