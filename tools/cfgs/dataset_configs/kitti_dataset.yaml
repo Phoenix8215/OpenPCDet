@@ -6,32 +6,34 @@ DATA_PATH: '../data/kitti'
 # z轴范围：从-3米到1米，表示高度范围。
 POINT_CLOUD_RANGE: [0, -40, -3, 70.4, 40, 1]
 
+# 数据集分类信息的位置OpenPCDet/data/kitti/ImageSets/test.txt
+# kitti验证集是没有标签的
 DATA_SPLIT: {
     'train': train,
     'test': val
 }
 
 INFO_PATH: {
-    'train': [kitti_infos_train.pkl],
+    'train': [kitti_infos_train.pkl], # 用于数据加载和处理，包含整个数据集的元数据（点云文件路径、标注信息、校准数据等）。
     'test': [kitti_infos_val.pkl],
 }
 
 GET_ITEM_LIST: ["points"]
-FOV_POINTS_ONLY: True
+FOV_POINTS_ONLY: True # 只考虑车前方范围的点云
 
 DATA_AUGMENTOR:
     DISABLE_AUG_LIST: ['placeholder']
     AUG_CONFIG_LIST:
         - NAME: gt_sampling
-          USE_ROAD_PLANE: True
+          USE_ROAD_PLANE: True # 该参数决定是否使用道路平面信息来调整点云数据的位置和姿态。
           DB_INFO_PATH:
-              - kitti_dbinfos_train.pkl
+              - kitti_dbinfos_train.pkl # 用于数据增强中的目标采样，包含目标物体的详细信息（点云数据、尺寸、位置等）。
           PREPARE: {
-             filter_by_min_points: ['Car:5', 'Pedestrian:5', 'Cyclist:5'],
-             filter_by_difficulty: [-1],
+             filter_by_min_points: ['Car:5', 'Pedestrian:5', 'Cyclist:5'], # 按最小点数过滤目标物体。这里设置 Car、Pedestrian 和 Cyclist 类型的目标物体，要求每类物体至少包含5个点。
+             filter_by_difficulty: [-1], # 按难度过滤目标物体。-1 表示不过滤任何难度的目标物体。
           }
 
-          SAMPLE_GROUPS: ['Car:20','Pedestrian:15', 'Cyclist:15']
+          SAMPLE_GROUPS: ['Car:20','Pedestrian:15', 'Cyclist:15'] # 从预先构建的数据库中选取一定数量的目标物体，并将其加入到原始数据中，以增强训练数据的多样性和丰富性。
           NUM_POINT_FEATURES: 4
           DATABASE_WITH_FAKELIDAR: False
           REMOVE_EXTRA_WIDTH: [0.0, 0.0, 0.0]
@@ -41,7 +43,7 @@ DATA_AUGMENTOR:
           ALONG_AXIS_LIST: ['x']
 
         - NAME: random_world_rotation
-          WORLD_ROT_ANGLE: [-0.78539816, 0.78539816]
+          WORLD_ROT_ANGLE: [-0.78539816, 0.78539816] # 这两个数字分别表示旋转角度的范围（通常是绕 z 轴进行旋转，因为 z 轴表示垂直于地面的方向）
 
         - NAME: random_world_scaling
           WORLD_SCALE_RANGE: [0.95, 1.05]
@@ -53,7 +55,7 @@ POINT_FEATURE_ENCODING: {
     src_feature_list: ['x', 'y', 'z', 'intensity'],
 }
 
-
+# 先执行DATA_PROCESSOR，再执行DATA_AUGMENTOR
 DATA_PROCESSOR:
     - NAME: mask_points_and_boxes_outside_range
       REMOVE_OUTSIDE_BOXES: True
@@ -63,11 +65,15 @@ DATA_PROCESSOR:
         'train': True,
         'test': False
       }
-
+# 仅仅grouping, 还没有到VFE的过程
     - NAME: transform_points_to_voxels
+    # 体素的大小，指定了每个体素在 x, y, z 三个轴方向上的尺寸：
+    # 0.05：体素在 x 轴方向上的尺寸为 0.05 米。
+    # 0.05：体素在 y 轴方向上的尺寸为 0.05 米。
+    # 0.1：体素在 z 轴方向上的尺寸为 0.1 米。
       VOXEL_SIZE: [0.05, 0.05, 0.1]
-      MAX_POINTS_PER_VOXEL: 5
+      MAX_POINTS_PER_VOXEL: 5 # 设置这个参数可以控制每个体素的稠密度，避免过多的点聚集在一个体素中，从而影响数据处理效率。
       MAX_NUMBER_OF_VOXELS: {
-        'train': 16000,
-        'test': 40000
+        'train': 16000, # 训练过程中最多生成 16000 个体素。
+        'test': 40000 # 测试过程中最多生成 40000 个体素。
       }
