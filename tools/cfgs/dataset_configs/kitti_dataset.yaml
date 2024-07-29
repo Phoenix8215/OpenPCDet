@@ -37,6 +37,8 @@ DATA_AUGMENTOR:
           NUM_POINT_FEATURES: 4
           DATABASE_WITH_FAKELIDAR: False
           REMOVE_EXTRA_WIDTH: [0.0, 0.0, 0.0]
+          # 当设置为 True 时，采样的目标物体会根据场景的范围和边界进行限制，确保这些物体合理地分布在整个点云场景中。
+          # 例如，在车辆前方、左右两侧等合理的位置，而不会出现在场景之外或不合适的位置。
           LIMIT_WHOLE_SCENE: True
 
         - NAME: random_world_flip
