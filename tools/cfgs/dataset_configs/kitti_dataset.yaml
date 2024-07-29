@@ -1,6 +1,9 @@
 DATASET: 'KittiDataset'
 DATA_PATH: '../data/kitti'
 
+# x轴范围：从0米到70.4米，表示前方的距离范围。
+# y轴范围：从-40米到40米，表示左右的距离范围。
+# z轴范围：从-3米到1米，表示高度范围。
 POINT_CLOUD_RANGE: [0, -40, -3, 70.4, 40, 1]
 
 DATA_SPLIT: {
