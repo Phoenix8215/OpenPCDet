@@ -15,7 +15,7 @@ MODEL:
 
     MAP_TO_BEV:
         NAME: HeightCompression
-        NUM_BEV_FEATURES: 256
+        NUM_BEV_FEATURES: 256 # 表示生成的BEV特征图的通道数量。
 
     BACKBONE_2D:
         NAME: BaseBEVBackbone
@@ -27,24 +27,37 @@ MODEL:
         NUM_UPSAMPLE_FILTERS: [256, 256]
 
     DENSE_HEAD:
-        NAME: AnchorHeadSingle
+        NAME: AnchorHeadSingle # 表示使用单个锚框头（Anchor Head）进行目标检测。该头部将负责生成和回归锚框，用于检测不同类别的目标物体。
+        # 类别敏感：当 CLASS_AGNOSTIC 设置为 False 时，检测器会区分不同的类别。例如，在自动驾驶场景中，检测器需要区分车辆、行人和骑行者等不同类别的目标物体。
+        # 锚框生成和回归：检测器会针对每个类别生成和回归对应的锚框。例如，不同类别的锚框可能有不同的尺寸、旋转角度和匹配阈值。
+        # 损失计算：在计算损失时，检测器会考虑每个类别的特定特征和分类要求，从而提高检测精度。
         CLASS_AGNOSTIC: False
+        USE_DIRECTION_CLASSIFIER: True # 当设置为 True 时，模型将在检测过程中使用方向分类器来估计目标物体的方向。这通常涉及将方向分为若干个类别（bins），然后对每个目标物体预测其所属的方向类别。
+        # 没有偏移量（假设）
 
-        USE_DIRECTION_CLASSIFIER: True
-        DIR_OFFSET: 0.78539
-        DIR_LIMIT_OFFSET: 0.0
-        NUM_DIR_BINS: 2
+        #     假设 DIR_OFFSET 为 0，方向bins划分如下：
+        #         方向bin 1：[-90度, 90度]
+        #         方向bin 2：[90度, 270度]
+
+        # 有偏移量（DIR_OFFSET: 0.78539）
+
+        #     添加偏移量后，方向bins划分如下：
+        #         方向bin 1：[-135度, 45度]
+        #         方向bin 2：[45度, 225度]
+        DIR_OFFSET: 0.78539 # 用于调整每个方向 bin 的中心角度，使预测角度偏移特定弧度。例如，设置为 0.78539 弧度（约 45 度）时，每个 bin 的中心角度将偏移 45 度。
+        DIR_LIMIT_OFFSET: 0.0 # 用于限制方向预测的角度范围。设置为 0.0 时，不对方向预测的范围进行额外偏移，保持默认范围 [-π, π]。
+        NUM_DIR_BINS: 2 # 方向分类的bins数量，设置为 2 表示将方向分类为两个类别（例如，前后或左右两个方向）。
 
         ANCHOR_GENERATOR_CONFIG: [
             {
                 'class_name': 'Car',
-                'anchor_sizes': [[3.9, 1.6, 1.56]],
-                'anchor_rotations': [0, 1.57],
-                'anchor_bottom_heights': [-1.78],
-                'align_center': False,
-                'feature_map_stride': 8,
-                'matched_threshold': 0.6,
-                'unmatched_threshold': 0.45
+                'anchor_sizes': [[3.9, 1.6, 1.56]], # 长3.9米，宽1.6米，高1.56米。
+                'anchor_rotations': [0, 1.57], # 指定锚框的旋转角度。0：表示锚框未旋转。1.57 弧度：约等于 90 度，表示锚框旋转了 90 度。
+                'anchor_bottom_heights': [-1.78], # 定义锚框底部相对于传感器安装位置的高度。
+                'align_center': False, # 如果设置为 True，锚框的中心将对齐到特征图的中心；如果设置为 False，则锚框可能对齐到特征图的边缘或其他参考点。
+                'feature_map_stride': 8, # 这是指在生成锚框时，每隔 8 个像素生成一个锚框。这通常与网络的下采样率有关，例如，如果特征图的下采样率为 8，表示特征图相对于输入图像每隔 8 个像素采样一次。
+                'matched_threshold': 0.6, # 表示交并比（IoU，Intersection over Union）大于或等于 0.6 的锚框将被认为是与目标匹配的正样本。
+                'unmatched_threshold': 0.45 # 表示交并比（IoU）小于 0.45 的锚框将被认为是不匹配的负样本。
             },
             {
                 'class_name': 'Pedestrian',
@@ -68,54 +81,86 @@ MODEL:
             }
         ]
 
-        TARGET_ASSIGNER_CONFIG:
+        TARGET_ASSIGNER_CONFIG: # 假设有一个场景，包含 1000 个锚框和多个真实目标框：
             NAME: AxisAlignedTargetAssigner
-            POS_FRACTION: -1.0
-            SAMPLE_SIZE: 512
-            NORM_BY_NUM_EXAMPLES: False
-            MATCH_HEIGHT: False
-            BOX_CODER: ResidualCoder
+            POS_FRACTION: -1.0 # 不限制正样本比例，允许正样本数量根据实际匹配情况变化。
+            SAMPLE_SIZE: 512 # 从 1000 个锚框中随机选择 512 个作为样本。
+            NORM_BY_NUM_EXAMPLES: False # 表示不按样本数量归一化损失。归一化损失是为了防止样本数量变化对损失计算的影响。如果设置为 True，损失会除以样本数量，以保证损失值的稳定性。
+            MATCH_HEIGHT: False # 在分配锚框为正负样本时，只考虑 x 和 y 轴上的匹配，高度上的差异被忽略。
+            BOX_CODER: ResidualCoder # 使用残差编码器，将锚框和真实边框之间的差异编码为残差，模型预测这些残差，通过解码还原出真实的边框位置和尺寸。
 
         LOSS_CONFIG:
             LOSS_WEIGHTS: {
                 'cls_weight': 1.0,
                 'loc_weight': 2.0,
                 'dir_weight': 0.2,
+                # ResidualCoder 边框编码器生成以下 7 个值来描述锚框与预测框之间的差异：
+                #     Δx：x 轴方向的偏移
+                #     Δy：y 轴方向的偏移
+                #     Δz：z 轴方向的偏移
+                #     Δl：长度的变化
+                #     Δw：宽度的变化
+                #     Δh：高度的变化
+                #     Δθ：旋转角度的变化
+                # code_weights 通过调整权重来改变不同预测值的影响力。例如，如果 z 轴方向的误差更为重要，可以增加对应的权重。
+                # 'code_weights': [1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0]
+
                 'code_weights': [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
             }
 
     POST_PROCESSING:
-        RECALL_THRESH_LIST: [0.3, 0.5, 0.7]
-        SCORE_THRESH: 0.1
-        OUTPUT_RAW_SCORE: False
+        RECALL_THRESH_LIST: [0.3, 0.5, 0.7] # 当IoU阈值为0.3、0.5和0.7时，分别计算模型的召回率。
+        SCORE_THRESH: 0.1 # 仅保留得分高于该阈值的检测框。设置为0.1表示得分低于0.1的检测框将被过滤掉。
+        OUTPUT_RAW_SCORE: False # 在输出原始得分之前，可能会进行一些后处理操作，如加权、归一化或过滤。例如，经过处理后的得分可能会考虑检测框的其他属性。
 
         EVAL_METRIC: kitti
 
         NMS_CONFIG:
-            MULTI_CLASSES_NMS: False
+            MULTI_CLASSES_NMS: False # 设置为False表示不对多个类别分别进行NMS，而是对所有检测框统一进行NMS。这可以简化处理过程，但在多类别检测中可能会降低精度。
             NMS_TYPE: nms_gpu
-            NMS_THRESH: 0.01
-            NMS_PRE_MAXSIZE: 4096
-            NMS_POST_MAXSIZE: 500
+            NMS_THRESH: 0.01 # 当两个检测框的IoU大于该阈值时，会进行抑制，只保留得分较高的检测框。设置为0.01表示非常严格的NMS阈值，用于去除几乎完全重叠的检测框。
+            NMS_PRE_MAXSIZE: 4096 # 在进行NMS之前最多保留4096个检测框，限制处理的检测框数量，提高效率。
+            NMS_POST_MAXSIZE: 500 # 在进行NMS之后最多保留500个检测框，确保结果精简和准确。
 
 
 OPTIMIZATION:
-    BATCH_SIZE_PER_GPU: 4
+    BATCH_SIZE_PER_GPU: 4 # 指定每个GPU在训练过程中处理的样本数量。
     NUM_EPOCHS: 80
 
-    OPTIMIZER: adam_onecycle
+    OPTIMIZER: adam_onecycle # adam_onecycle表示使用Adam优化器并结合One Cycle学习率策略。
     LR: 0.003
     WEIGHT_DECAY: 0.01
     MOMENTUM: 0.9
 
-    MOMS: [0.95, 0.85]
-    PCT_START: 0.4
-    DIV_FACTOR: 10
-    DECAY_STEP_LIST: [35, 45]
-    LR_DECAY: 0.1
-    LR_CLIP: 0.0000001
+    MOMS: [0.95, 0.85] # 在训练开始时，动量较大，以减小震荡；在训练结束时，动量较小，以加快收敛。
+    PCT_START: 0.4 # 在训练的前40%时间内，学习率从初始值增加到最大值；之后逐渐减小。
+    DIV_FACTOR: 10 # 初始学习率为最大值的1/10。初始学习率 = 0.003 / 10 = 0.0003。
+    DECAY_STEP_LIST: [35, 45] # 在第35和第45个epoch时进行学习率衰减。每次衰减时，学习率乘以0.1。
+    LR_DECAY: 0.1 # 表示在指定epoch进行学习率衰减时，学习率乘以0.1。
+    LR_CLIP: 0.0000001 # 学习率最小值为0.0000001。防止学习率过小导致训练停滞。
 
     LR_WARMUP: False
     WARMUP_EPOCH: 1
 
-    GRAD_NORM_CLIP: 10
+    GRAD_NORM_CLIP: 10 # 在每次参数更新之前，如果梯度的L2范数大于10，则将梯度裁剪到10以内，防止梯度爆炸。
+
+
+# 初始化
+#     使用Adam优化器，并结合One Cycle策略。
+#     设置初始学习率为0.0003（最大值的1/10）。
+
+# 前40%训练时间
+#     学习率从0.0003逐渐增加到0.003。
+#     动量从0.95逐渐减小到0.85。
+
+# 后60%训练时间
+#     学习率从0.003逐渐减小到接近0。
+#     动量从0.85逐渐增加到0.95。
+
+# 学习率衰减
+#     在第35和第45个epoch时，学习率分别衰减一次，每次衰减系数为0.1。
+#     例如，在第35个epoch时，学习率从0.003变为0.003 * 0.1 = 0.0003。
+
+# 梯度裁剪
+#     在每次参数更新前，计算梯度的L2范数。
+#     如果梯度范数大于10，则进行裁剪，将其限制在10以内。
