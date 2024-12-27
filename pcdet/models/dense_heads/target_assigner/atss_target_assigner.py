@@ -139,3 +139,6 @@ class ATSSTargetAssigner(object):
             reg_weights[pos_mask] = 1.0
 
         return cls_labels, reg_targets, reg_weights
+"""
+- ATSS 的核心思想是选取最适合的锚框而不是仅仅依赖于一个固定的 IoU 阈值。它利用 IoU 均值和标准差 计算一个动态的阈值，选取与目标框最匹配的 topk 个锚框。
+"""

@@ -208,3 +208,15 @@ class AxisAlignedTargetAssigner(object):
             'reg_weights': reg_weights,
         }
         return ret_dict
+
+"""
+分配目标的过程为：
+
+    计算每个锚框与目标框的 IoU。
+    根据 IoU 阈值分配正负样本：
+        正样本：IoU ≥ 0.6。
+        负样本：IoU < 0.45。
+        忽略：0.45 ≤ IoU < 0.6。
+    为正样本计算回归偏移量。
+    返回分类标签、回归目标和回归权重。
+"""
