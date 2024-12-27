@@ -66,7 +66,7 @@ if __name__ == '__main__':
         EasyDict({
             'anchor_sizes': [[2.1, 4.7, 1.7], [0.86, 0.91, 1.73], [0.84, 1.78, 1.78]],
             'anchor_rotations': [0, 1.57],
-            'anchor_heights': [0, 0.5]
+            'anchor_bottom_heights': [0, 0.5],
         })
     ]
 
@@ -74,6 +74,21 @@ if __name__ == '__main__':
         anchor_range=[-75.2, -75.2, -2, 75.2, 75.2, 4],
         anchor_generator_config=config
     )
-    import pdb
-    pdb.set_trace()
-    A.generate_anchors([[188, 188]])
+    all_anchors, num_anchors_per_location = A.generate_anchors([[188, 188]])
+
+    # 打印 all_anchors 和 num_anchors_per_location 的维度
+    for i, anchors in enumerate(all_anchors):
+        print(f"Anchors for set {i} shape: {anchors.shape}")
+
+    print(f"num_anchors_per_location: {num_anchors_per_location}")
+
+"""
+2: 高度相关的两个值（anchor_bottom_heights）
+188: 网格的宽度（x 轴方向）
+188: 网格的高度（y 轴方向）
+3: 不同尺寸的锚框（anchor_sizes）
+2: 不同旋转角度的锚框（anchor_rotations）
+7: 每个锚框的七个属性（x, y, z, width, height, depth, rotation）
+Anchors for set 0 shape: torch.Size([2, 188, 188, 3, 2, 7])
+num_anchors_per_location: [12]
+"""
