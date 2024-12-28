@@ -24,6 +24,8 @@ class MeanVFE(VFETemplate):
         """
         voxel_features, voxel_num_points = batch_dict['voxels'], batch_dict['voxel_num_points']
         points_mean = voxel_features[:, :, :].sum(dim=1, keepdim=False)
+        # 对每个体素的点数进行处理，确保其至少为 1，避免除法中的零除错误，
+        # 同时将其转换为与 voxel_features 相同的数据类型，以便后续进行特征的归一化计算。
         normalizer = torch.clamp_min(voxel_num_points.view(-1, 1), min=1.0).type_as(voxel_features)
         points_mean = points_mean / normalizer
         batch_dict['voxel_features'] = points_mean.contiguous()
