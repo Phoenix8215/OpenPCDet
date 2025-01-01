@@ -195,7 +195,11 @@ class VoxelResBackBone8xVoxelNeXt(nn.Module):
         x_conv6.indices[:, 1:] *= 4
         x_conv4 = x_conv4.replace_feature(torch.cat([x_conv4.features, x_conv5.features, x_conv6.features]))
         x_conv4.indices = torch.cat([x_conv4.indices, x_conv5.indices, x_conv6.indices])
-
+        """
+            将三维稀疏张量转化为 BEV 平面特征。
+            通过特征聚合（移除高度维度），生成一个新的稀疏张量，专注于 BEV 平面。
+            将高度维度的特征进行相加，因为它在 BEV 平面 上将具有相同水平位置
+        """
         out = self.bev_out(x_conv4)
 
         out = self.conv_out(out)
